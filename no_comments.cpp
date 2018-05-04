@@ -4,7 +4,11 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <math.h>
+<<<<<<< HEAD
 #include <algorithm>
+=======
+#include <cmath>
+>>>>>>> 41a09653f9ba3875c7dab37afedf4a3ecefa5e5f
 #include <map>
 #include <fstream>
 #define GL_GLEXT_PROTOTYPES
@@ -41,7 +45,8 @@ double rotate_y=0;
 double rotate_x=0;
 // weights = array of the values read ob the text file
 // cubes = 3d matrix with the values of weights on each cube
-double largo, ancho, alto , weights[151], cubes[5][5][5];
+double largo, ancho, alto , weights[1001], cubes[10][10][10];
+
 // init color mapping
 rgb color1 = {91.0,192.0,235.0};
 rgb color2 = {133.0,203.0,51.0};
@@ -73,22 +78,17 @@ void readCoordinates(string fileName) {
     file >> largo >> ancho >> alto;
     while(!file.eof()) {
         file >> x;
+        x = fmod(x,5.0) + 1;
         weights[row] = x;
         row++;
     }
     file.close();
 
-    // TODO: remove later
-    for(int i = row; i < 125; i++) {
-        weights[i] = rand() % 5 + 1;
-        row++;
-    }
-
     row = 0;
     coordinate point;
-    for(int i = 0; i < 5; i++) {
-        for(int j = 0; j < 5; j++) {
-            for(int k = 0; k < 5; k++) {
+    for(int i = 0; i < int(largo); i++) {
+        for(int j = 0; j < int(ancho); j++) {
+            for(int k = 0; k < int(alto); k++) {
                 point.x = i + 0.1;
                 point.y = j + 0.1;
                 point.z = k + 0.1;
@@ -159,9 +159,9 @@ void display(){
     int value = 0;
     double distance, alpha = 0.5;
     rgb aux;
-    for(int i = 0; i < 5; i++) {
-        for(int j = 0; j < 5; j++) {
-            for(int k = 0; k < 5; k++) {
+    for(int i = 0; i < int(largo); i++) {
+        for(int j = 0; j < int(ancho); j++) {
+            for(int k = 0; k < int(alto); k++) {
                 value = cubes[i][j][j];
                 aux = color_map[value];
 
