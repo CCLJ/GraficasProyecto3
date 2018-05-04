@@ -4,6 +4,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <math.h>
+#include <algorithm>
 #include <map>
 #include <fstream>
 #define GL_GLEXT_PROTOTYPES
@@ -19,6 +20,12 @@ struct rgb {
     double red;
     double green;
     double blue; 
+};
+
+struct coordinate {
+    double x;
+    double y;
+    double z;
 };
 
 // ----------------------------------------------------------
@@ -49,6 +56,11 @@ map<int, rgb> color_map = {
     {5, color5}
 };
 
+coordinate coordinates[5][5][5];
+
+double min_distance = 0;
+double max_distance = 0;
+
 // ----------------------------------------------------------
 // readCoordinates
 // ----------------------------------------------------------
@@ -73,9 +85,14 @@ void readCoordinates(string fileName) {
     }
 
     row = 0;
+    coordinate point;
     for(int i = 0; i < 5; i++) {
         for(int j = 0; j < 5; j++) {
             for(int k = 0; k < 5; k++) {
+                point.x = i + 0.1;
+                point.y = j + 0.1;
+                point.z = k + 0.1;
+                coordinates[i][j][k] = point;
                 cubes[i][j][k] = weights[row];
                 row++;
             }
@@ -83,6 +100,45 @@ void readCoordinates(string fileName) {
     }
 }
 
+// ----------------------------------------------------------
+// calculate min and max distance
+// ----------------------------------------------------------
+
+void calculateMinMax() {
+    double distance;
+    for(int i = 0; i < 5; i++) {
+        for(int j = 0; j < 5; j++) {
+            for(int k = 0; k < 5; k++) {
+                coordinate point = coordinates[i][j][k];
+                distance = sqrt(pow(point.x - 0, 2) + pow(point.y - 0, 2) + pow(point.z - 0, 2));
+                min_distance =  max(min_distance, distance);
+                max_distance = min(max_distance, distance);
+            }
+        }
+    }
+}
+
+// ----------------------------------------------------------
+// updateCoordinatesOfMatrix
+// ----------------------------------------------------------
+void updateMatrix(int axis, double value) {
+    for(int i = 0; i < 5; i++) {
+        for(int j = 0; j < 5; j++) {
+            for(int k = 0; k < 5; k++) {
+                coordinate point = coordinates[i][j][k];
+                // x axis
+                if (axis == 1) {
+                    point.x = point.x * cos(value) - point.y*sin(value);
+                    coordinates[i][j][k] = point;
+                } else if (axis == 2) { // y axis
+                    point.y  = point.x*sin(value) + point.y * cos(value);
+                    coordinates[i][j][k] = point;
+                }
+            }
+        }
+    }
+    calculateMinMax();
+}
 
 // ----------------------------------------------------------
 // display() Callback function
@@ -116,12 +172,28 @@ void display(){
                 else {
                     alpha = 0.1;
                 }
-
+                coordinate point = coordinates[i][j][k];
+                // calculate distance to origin
+                distance = sqrt(pow(point.x - 0, 2) + pow(point.y - 0, 2) + pow(point.z, 2));
+                // normalize
+                distance = (distance - min_distance) / (max_distance - min_distance);
+                distance = abs(distance-1);
                 glPushMatrix();
-                    glColor4d(
-                        (aux.red) / 255.0 , 
+                if (alpha == 1.0) {
+                    if (k > 3) {
+                        glColor4d((aux.red) / 255.0 ,
+                        (aux.green) / 255.0, 
+                        (aux.blue) / 255.0, 0.8);
+                    } else {
+                        glColor4d((aux.red) / 255.0 ,
                         (aux.green) / 255.0, 
                         (aux.blue) / 255.0, alpha);
+                    }
+                } else {
+                    glColor4d((aux.red) / 255.0 ,
+                        (aux.green) / 255.0, 
+                        (aux.blue) / 255.0, distance);
+                }
                     glTranslated(0.0 + 0.1 * float(i), 0.0 + 0.1 * float(j) , 0.0 + 0.1 * float(k));
                     glutSolidCube(0.1);
                 glPopMatrix();
@@ -139,18 +211,21 @@ void display(){
 void specialKeys( int key, int x, int y ) {
  
     //  Right arrow - increase rotation by 5 degree
-    if (key == GLUT_KEY_RIGHT)
+    if (key == GLUT_KEY_RIGHT) {
         rotate_y += 5;
+        updateMatrix(2, 5);
     
     //  Left arrow - decrease rotation by 5 degree
-    else if (key == GLUT_KEY_LEFT)
+    } else if (key == GLUT_KEY_LEFT) {
         rotate_y -= 5;
-    
-    else if (key == GLUT_KEY_UP)
+        updateMatrix(2, -5);
+    } else if (key == GLUT_KEY_UP) {
         rotate_x += 5;
-    
-    else if (key == GLUT_KEY_DOWN)
+        updateMatrix(x, 5);
+    } else if (key == GLUT_KEY_DOWN) {
         rotate_x -= 5;
+        updateMatrix(x, -5);
+    }
     
     else if(key == 113) // q for exiting program
         exit(0);
