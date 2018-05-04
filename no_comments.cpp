@@ -4,6 +4,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <math.h>
+#include <cmath>
 #include <map>
 #include <fstream>
 #define GL_GLEXT_PROTOTYPES
@@ -61,16 +62,11 @@ void readCoordinates(string fileName) {
     file >> largo >> ancho >> alto;
     while(!file.eof()) {
         file >> x;
+        x = fmod(x,5.0) + 1;
         weights[row] = x;
         row++;
     }
     file.close();
-
-    // TODO: remove later
-    for(int i = row; i < 125; i++) {
-        weights[i] = rand() % 5 + 1;
-        row++;
-    }
 
     row = 0;
     for(int i = 0; i < 5; i++) {
