@@ -1,7 +1,10 @@
 #include <stdio.h>
+#include <string>
+#include <iostream>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <math.h>
+#include <fstream>
 #define GL_GLEXT_PROTOTYPES
 #ifdef __APPLE__
 #include <GLUT/glut.h>
@@ -9,6 +12,7 @@
 #include <GL/glut.h>
 #endif
  
+using namespace std;
 // ----------------------------------------------------------
 // Function Prototypes
 // ----------------------------------------------------------
@@ -20,7 +24,26 @@ void specialKeys();
 // ----------------------------------------------------------
 double rotate_y=0; 
 double rotate_x=0;
+double volume[100][3];
  
+// ----------------------------------------------------------
+// readCordinates
+// ----------------------------------------------------------
+void readCordinates(string fileName) {
+    ifstream file;
+    double x, y, z;
+    int row = 0;
+    file.open(fileName);
+    while(!file.eof()) {
+        file >> x >> y >> z;
+        volume[row][0] = x;
+        volume[row][1] = y;
+        volume[row][2] = z;
+        row++;
+    }
+    file.close();
+}
+
 // ----------------------------------------------------------
 // display() Callback function
 // ----------------------------------------------------------
@@ -29,78 +52,17 @@ void display(){
     //  Clear screen and Z-buffer
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
     
-
     // Reset transformations
     glLoadIdentity();
     
     // Rotate when user changes rotate_x and rotate_y
     glRotatef(rotate_x, 1.0, 0.0, 0.0 );
-    glRotatef(rotate_y, 0.0, 1.0, 0.0 );
-    
-    
-    // Multi-colored side - FRONT
-    glBegin(GL_POLYGON);
-        glColor3f( 1.0, 0.0, 0.0 );     
-        glVertex3f(  0.5, -0.5, -0.5 );      // P1 is red
-        glColor3f( 0.0, 1.0, 0.0 );     
-        glVertex3f(  0.5,  0.5, -0.5 );      // P2 is green
-        glColor3f( 0.0, 0.0, 1.0 );     
-        glVertex3f( -0.5,  0.5, -0.5 );      // P3 is blue
-        glColor3f( 1.0, 0.0, 1.0 );     
-        glVertex3f( -0.5, -0.5, -0.5 );      // P4 is purple
-    glEnd();
-    
-    // White side - BACK
-    glBegin(GL_POLYGON);
-        glColor3f(   1.0,  1.0, 1.0 );
-        glVertex3f(  0.5, -0.5, 0.5 );
-        glVertex3f(  0.5,  0.5, 0.5 );
-        glVertex3f( -0.5,  0.5, 0.5 );
-        glVertex3f( -0.5, -0.5, 0.5 );
-    glEnd();
-    
-    // Purple side - RIGHT
-    glBegin(GL_POLYGON);
-        glColor3f(  1.0,  0.0,  1.0 );
-        glVertex3f( 0.5, -0.5, -0.5 );
-        glVertex3f( 0.5,  0.5, -0.5 );
-        glVertex3f( 0.5,  0.5,  0.5 );
-        glVertex3f( 0.5, -0.5,  0.5 );
-    glEnd();
-    
-    // Green side - LEFT
-    glBegin(GL_POLYGON);
-        glColor3f(   0.0,  1.0,  0.0 );
-        glVertex3f( -0.5, -0.5,  0.5 );
-        glVertex3f( -0.5,  0.5,  0.5 );
-        glVertex3f( -0.5,  0.5, -0.5 );
-        glVertex3f( -0.5, -0.5, -0.5 );
-    glEnd();
-    
-    // Blue side - TOP
-    glBegin(GL_POLYGON);
-        glColor3f(   0.0,  0.0,  1.0 );
-        glVertex3f(  0.5,  0.5,  0.5 );
-        glVertex3f(  0.5,  0.5, -0.5 );
-        glVertex3f( -0.5,  0.5, -0.5 );
-        glVertex3f( -0.5,  0.5,  0.5 );
-    glEnd();
-    
-    // Red side - BOTTOM
-    glBegin(GL_POLYGON);
-        glColor3f(   1.0,  0.0,  0.0 );
-        glVertex3f(  0.5, -0.5, -0.5 );
-        glVertex3f(  0.5, -0.5,  0.5 );
-        glVertex3f( -0.5, -0.5,  0.5 );
-        glVertex3f( -0.5, -0.5, -0.5 );
-    glEnd();
+    glRotatef(rotate_y, 0.0, 1.0, 0.0 );      
     
     // ADDED - SOLID CUBE ------------------
-    // glColor4f(0.0f, 0.0f, 1.0f, 1.0f);
-    // glutSolidCube(1);
-    //     glTranslated(0.0, 0.0 , -3.0);
-    //     glRotated(rotate_x, 1.0, 0.0, 0.0 );
-    //     glRotated(rotate_y, 0.0, 1.0, 0.0 );
+    glColor4f(0.0f, 0.0f, 1.0f, 1.0f);
+    glutSolidCube(1);
+        glTranslated(0.0, 0.0 , -3.0);
     // --------------------------------------
 
     glFlush();
@@ -142,6 +104,11 @@ void specialKeys( int key, int x, int y ) {
 // ----------------------------------------------------------
 int main(int argc, char* argv[]){
  
+    string fileName = "";
+    cout << "Give name of text file with extension: ";
+    cin >> fileName;
+    readCordinates(fileName);
+
     //  Initialize GLUT and process user parameters
     glutInit(&argc,argv);
     
@@ -152,7 +119,7 @@ int main(int argc, char* argv[]){
     glutCreateWindow("Awesome Cube");
     
     //  Enable Z-buffer depth test
-    glEnable(GL_DEPTH_TEST);
+    // glEnable(GL_DEPTH_TEST);
 
     // ADDED - CUBE TRANSPARENCY ---------------------
     glEnable(GL_BLEND);
@@ -164,7 +131,7 @@ int main(int argc, char* argv[]){
     glutSpecialFunc(specialKeys);
 
     // ADDED - CUBE TRANSPARENCY ---------------------
-    glDisable(GL_BLEND);
+    // glDisable(GL_BLEND);
     // -----------------------------------------------
     
     //  Pass control to GLUT for events
