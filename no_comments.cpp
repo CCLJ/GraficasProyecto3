@@ -33,6 +33,14 @@ void specialKeys();
 // ----------------------------------------------------------
 double rotate_y=0; 
 double rotate_x=0;
+
+// angle of rotation for the camera direction
+float angle=0.0;
+// actual vector representing the camera's direction
+float lx=0.0f,lz=-1.0f;
+// XZ position of the camera
+float x=0.0f,z=5.0f;
+
 // weights = array of the values read ob the text file
 // cubes = 3d matrix with the values of weights on each cube
 double largo, ancho, alto , weights[1001], cubes[10][10][10];
@@ -92,6 +100,10 @@ void display(){
     // Reset transformations
     glLoadIdentity();
 
+    // gluLookAt(	x, 1.0f, z,
+	// 		x+lx, 1.0f,  z+lz,
+	// 		0.0f, 1.0f,  0.0f);
+
     // Rotate when user changes rotate_x and rotate_y
     glRotatef(rotate_x, 1.0, 0.0, 0.0 );
     glRotatef(rotate_y, 0.0, 1.0, 0.0 );      
@@ -135,20 +147,31 @@ void display(){
 // ----------------------------------------------------------
 void specialKeys( int key, int x, int y ) {
  
+    float fraction = 0.1f;
     //  Right arrow - increase rotation by 5 degree
-    if (key == GLUT_KEY_RIGHT)
+    if (key == GLUT_KEY_RIGHT) {
         rotate_y += 5;
-    
+        // angle += 0.01f;
+        // lx = sin(angle);
+        // lz = -cos(angle);
+    }
     //  Left arrow - decrease rotation by 5 degree
-    else if (key == GLUT_KEY_LEFT)
+    else if (key == GLUT_KEY_LEFT) {
         rotate_y -= 5;
-    
-    else if (key == GLUT_KEY_UP)
+        // angle -= 0.01f;
+        // lx = sin(angle);
+        // lz = -cos(angle);
+    }
+    else if (key == GLUT_KEY_UP) {
         rotate_x += 5;
-    
-    else if (key == GLUT_KEY_DOWN)
+        // x += lx * fraction;
+        // z += lz * fraction;
+    }
+    else if (key == GLUT_KEY_DOWN) {
         rotate_x -= 5;
-    
+        // x -= lx * fraction;
+        // z -= lz * fraction;
+    }
     else if(key == 113) // q for exiting program
         exit(0);
     
