@@ -4,11 +4,8 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <math.h>
-<<<<<<< HEAD
 #include <algorithm>
-=======
 #include <cmath>
->>>>>>> 41a09653f9ba3875c7dab37afedf4a3ecefa5e5f
 #include <map>
 #include <fstream>
 #define GL_GLEXT_PROTOTYPES
