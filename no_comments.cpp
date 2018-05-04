@@ -35,7 +35,8 @@ double rotate_y=0;
 double rotate_x=0;
 // weights = array of the values read ob the text file
 // cubes = 3d matrix with the values of weights on each cube
-double largo, ancho, alto , weights[151], cubes[5][5][5];
+double largo, ancho, alto , weights[1001], cubes[10][10][10];
+
 // init color mapping
 rgb color1 = {91.0,192.0,235.0};
 rgb color2 = {133.0,203.0,51.0};
@@ -69,9 +70,9 @@ void readCoordinates(string fileName) {
     file.close();
 
     row = 0;
-    for(int i = 0; i < 5; i++) {
-        for(int j = 0; j < 5; j++) {
-            for(int k = 0; k < 5; k++) {
+    for(int i = 0; i < int(largo); i++) {
+        for(int j = 0; j < int(ancho); j++) {
+            for(int k = 0; k < int(alto); k++) {
                 cubes[i][j][k] = weights[row];
                 row++;
             }
@@ -99,9 +100,9 @@ void display(){
     int value = 0;
     double distance, alpha = 0.5;
     rgb aux;
-    for(int i = 0; i < 5; i++) {
-        for(int j = 0; j < 5; j++) {
-            for(int k = 0; k < 5; k++) {
+    for(int i = 0; i < int(largo); i++) {
+        for(int j = 0; j < int(ancho); j++) {
+            for(int k = 0; k < int(alto); k++) {
                 value = cubes[i][j][j];
                 aux = color_map[value];
 
