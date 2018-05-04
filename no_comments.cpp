@@ -68,7 +68,7 @@ void readCoordinates(string fileName) {
 
     // TODO: remove later
     for(int i = row; i < 125; i++) {
-        weights[i] = (i % 5) + 1;
+        weights[i] = rand() % 5 + 1;
         row++;
     }
 
@@ -89,18 +89,11 @@ void readCoordinates(string fileName) {
 // ----------------------------------------------------------
 void display(){
  
-    glPushMatrix();
-    gluLookAt(25.0f, 25.0f, 10.0f,
-            0.0f, 0.0f,  0.0f,
-            0.0f, 1.0f,  0.0f);
-    glPopMatrix();
-
     //  Clear screen and Z-buffer
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
     
     // Reset transformations
     glLoadIdentity();
-    
 
     // Rotate when user changes rotate_x and rotate_y
     glRotatef(rotate_x, 1.0, 0.0, 0.0 );
@@ -108,17 +101,29 @@ void display(){
     
     // ADDED - SOLID CUBE ------------------
     int value = 0;
-    double dX = 0.0, dY = 0.0, dZ = 0.0;
+    double distance, alpha = 0.5;
     rgb aux;
     for(int i = 0; i < 5; i++) {
         for(int j = 0; j < 5; j++) {
             for(int k = 0; k < 5; k++) {
                 value = cubes[i][j][j];
                 aux = color_map[value];
+
+                // keep center with less transparency
+                if (i >= 1 && i <= 3 && j >= 1 && j <= 3 && k >= 1 && k <= 3) {
+                    alpha = 1.0;
+                }
+                else {
+                    alpha = 0.1;
+                }
+
                 glPushMatrix();
-                glColor4d(aux.red / 255.0 , aux.green / 255.0, aux.blue / 255.0, 0.8);
-                glTranslated(0.0 + 0.1 * float(i), 0.0 + 0.1 * float(j) , 0.0 + 0.1 * float(k));
-                glutSolidCube(0.1);
+                    glColor4d(
+                        (aux.red) / 255.0 , 
+                        (aux.green) / 255.0, 
+                        (aux.blue) / 255.0, alpha);
+                    glTranslated(0.0 + 0.1 * float(i), 0.0 + 0.1 * float(j) , 0.0 + 0.1 * float(k));
+                    glutSolidCube(0.1);
                 glPopMatrix();
             }
         }
