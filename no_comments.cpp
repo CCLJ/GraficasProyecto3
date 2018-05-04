@@ -4,6 +4,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <math.h>
+#include <map>
 #include <fstream>
 #define GL_GLEXT_PROTOTYPES
 #ifdef __APPLE__
@@ -13,6 +14,13 @@
 #endif
  
 using namespace std;
+
+struct rgb {
+    double red;
+    double green;
+    double blue; 
+};
+
 // ----------------------------------------------------------
 // Function Prototypes
 // ----------------------------------------------------------
@@ -24,52 +32,100 @@ void specialKeys();
 // ----------------------------------------------------------
 double rotate_y=0; 
 double rotate_x=0;
-double volume[100][3];
- 
+// weights = array of the values read ob the text file
+// cubes = 3d matrix with the values of weights on each cube
+double largo, ancho, alto , weights[151], cubes[5][5][5];
+// init color mapping
+rgb color1 = {91.0,192.0,235.0};
+rgb color2 = {133.0,203.0,51.0};
+rgb color3 = {253.0,231.0,76.0};
+rgb color4 = {255.0,188.0,66.0};
+rgb color5 = {216.0,17.0,89.0}; 
+map<int, rgb> color_map = {
+    {1, color1},
+    {2, color2},
+    {3, color3},
+    {4, color4},
+    {5, color5}
+};
+
 // ----------------------------------------------------------
-// readCordinates
+// readCoordinates
 // ----------------------------------------------------------
-void readCordinates(string fileName) {
+void readCoordinates(string fileName) {
+
     ifstream file;
-    double x, y, z;
+    double x;
     int row = 0;
     file.open(fileName);
+    file >> largo >> ancho >> alto;
     while(!file.eof()) {
-        file >> x >> y >> z;
-        volume[row][0] = x;
-        volume[row][1] = y;
-        volume[row][2] = z;
+        file >> x;
+        weights[row] = x;
         row++;
     }
     file.close();
+
+    // TODO: remove later
+    for(int i = row; i < 125; i++) {
+        weights[i] = (i % 5) + 1;
+        row++;
+    }
+
+    row = 0;
+    for(int i = 0; i < 5; i++) {
+        for(int j = 0; j < 5; j++) {
+            for(int k = 0; k < 5; k++) {
+                cubes[i][j][k] = weights[row];
+                row++;
+            }
+        }
+    }
 }
+
 
 // ----------------------------------------------------------
 // display() Callback function
 // ----------------------------------------------------------
 void display(){
  
+    glPushMatrix();
+    gluLookAt(25.0f, 25.0f, 10.0f,
+            0.0f, 0.0f,  0.0f,
+            0.0f, 1.0f,  0.0f);
+    glPopMatrix();
+
     //  Clear screen and Z-buffer
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
     
     // Reset transformations
     glLoadIdentity();
     
+
     // Rotate when user changes rotate_x and rotate_y
     glRotatef(rotate_x, 1.0, 0.0, 0.0 );
     glRotatef(rotate_y, 0.0, 1.0, 0.0 );      
     
     // ADDED - SOLID CUBE ------------------
-    glColor4f(0.0f, 0.0f, 1.0f, 1.0f);
-    glutSolidCube(1);
-        glTranslated(0.0, 0.0 , -3.0);
-    // --------------------------------------
-
+    int value = 0;
+    double dX = 0.0, dY = 0.0, dZ = 0.0;
+    rgb aux;
+    for(int i = 0; i < 5; i++) {
+        for(int j = 0; j < 5; j++) {
+            for(int k = 0; k < 5; k++) {
+                value = cubes[i][j][j];
+                aux = color_map[value];
+                glPushMatrix();
+                glColor4d(aux.red / 255.0 , aux.green / 255.0, aux.blue / 255.0, 0.8);
+                glTranslated(0.0 + 0.1 * float(i), 0.0 + 0.1 * float(j) , 0.0 + 0.1 * float(k));
+                glutSolidCube(0.1);
+                glPopMatrix();
+            }
+        }
+    }
+    
     glFlush();
     glutSwapBuffers();
-
-
- 
 }
  
 // ----------------------------------------------------------
@@ -104,16 +160,20 @@ void specialKeys( int key, int x, int y ) {
 // ----------------------------------------------------------
 int main(int argc, char* argv[]){
  
+    // get data from file
     string fileName = "";
     cout << "Give name of text file with extension: ";
     cin >> fileName;
-    readCordinates(fileName);
+    readCoordinates(fileName);
 
     //  Initialize GLUT and process user parameters
     glutInit(&argc,argv);
     
     //  Request double buffered true color window with Z-buffer
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+
+    // window size
+    glutInitWindowSize(480, 480);
     
     // Create window
     glutCreateWindow("Awesome Cube");
