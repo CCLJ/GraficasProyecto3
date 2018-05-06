@@ -88,7 +88,6 @@ void readCoordinates(string fileName) {
     }
 }
 
-
 // ----------------------------------------------------------
 // display() Callback function
 // ----------------------------------------------------------
@@ -99,19 +98,21 @@ void display(){
     
     // Reset transformations
     glLoadIdentity();
-
     // gluLookAt(	x, 1.0f, z,
 	// 		x+lx, 1.0f,  z+lz,
 	// 		0.0f, 1.0f,  0.0f);
 
     // Rotate when user changes rotate_x and rotate_y
     glRotatef(rotate_x, 1.0, 0.0, 0.0 );
-    glRotatef(rotate_y, 0.0, 1.0, 0.0 );      
+    glRotatef(rotate_y, 0.0, 1.0, 0.0 );
     
     // ADDED - SOLID CUBE ------------------
     int value = 0;
     double distance, alpha = 0.5;
     rgb aux;
+    largo = int(largo);
+    ancho = int(ancho);
+    alto = int(alto);
     for(int i = 0; i < int(largo); i++) {
         for(int j = 0; j < int(ancho); j++) {
             for(int k = 0; k < int(alto); k++) {
@@ -119,7 +120,7 @@ void display(){
                 aux = color_map[value];
 
                 // keep center with less transparency
-                if (i >= 1 && i <= 3 && j >= 1 && j <= 3 && k >= 1 && k <= 3) {
+                if (i >= 1 && i <= largo-2 && j >= 1 && j <= ancho-2 && k >= 1 && k <= alto-2) {
                     alpha = 1.0;
                 }
                 else {
@@ -131,17 +132,158 @@ void display(){
                         (aux.red) / 255.0 , 
                         (aux.green) / 255.0, 
                         (aux.blue) / 255.0, alpha);
+
                     glTranslated(0.0 + 0.1 * float(i), 0.0 + 0.1 * float(j) , 0.0 + 0.1 * float(k));
                     glutSolidCube(0.1);
                 glPopMatrix();
             }
         }
     }
-    
+
     glFlush();
     glutSwapBuffers();
 }
- 
+
+struct Coordinate {
+    int x;
+    int y;
+    int z;
+};
+
+void generateObjFile() {
+    Coordinate coordinates[8];
+    Coordinate temp;
+    temp.x = 0.0;
+    temp.y = 0.0;
+    temp.z = 0.0;
+    coordinates[0] = temp;
+    temp.x = 0.0;
+    temp.y = 0.0;
+    temp.z = 1.0;
+    coordinates[1] = temp;
+    temp.x = 0.0;
+    temp.y = 1.0;
+    temp.z = 0.0;
+    coordinates[2] = temp;
+    temp.x = 0.0;
+    temp.y = 1.0;
+    temp.z = 1.0;
+    coordinates[3] = temp;
+    temp.x = 1.0;
+    temp.y = 0.0;
+    temp.z = 0.0;
+    coordinates[4] = temp;
+    temp.x = 1.0;
+    temp.y = 0.0;
+    temp.z = 1.0;
+    coordinates[5] = temp;
+    temp.x = 1.0;
+    temp.y = 1.0;
+    temp.z = 0.0;
+    coordinates[6] = temp;
+    temp.x = 1.0;
+    temp.y = 1.0;
+    temp.z = 1.0;
+    coordinates[7] = temp;
+    int start = -7;
+    int end = 0;
+    ofstream writer("cube.obj", ios::app);
+    for (int i = 0; i < int(largo); ++i) {
+        for(int j = 0; j < int(ancho); ++j) {
+            for (int k = 0; k < int(alto); ++k) {
+                // Update the position of each vertices
+                for (int x = 0; x < 8; ++x) {
+                    temp = coordinates[x];
+                    temp.x += i;
+                    temp.y += j;
+                    temp.z += k;
+                    coordinates[x] = temp;
+                }
+                // write the vertices in the file
+                string line;
+                for (int x = 0; x < 8; ++x) {
+                    line = "v ";
+                    temp = coordinates[x];
+                    line += to_string(temp.x);
+                    line += " ";
+                    line += to_string(temp.y);
+                    line += " ";
+                    line += to_string(temp.z);
+                    line += "\n";
+                    writer << line;
+                }
+            }
+        }
+    }
+    string line;
+    for (x = 0; x < 8; ++x) {
+        start += 8;
+        end += 8;
+        line = "f " + to_string(start) + "//" + to_string(start+1);
+        line += " " + to_string(end-1) + "//" + to_string(start+1);
+        line += " " + to_string(start+4) + "//" + to_string(start+1);
+        line += "\n";
+        writer << line;
+        line = "f " + to_string(start) + "//" + to_string(start+1);
+        line += " " + to_string(start+2) + "//" + to_string(start+1);
+        line += " " + to_string(end-1) + "//" + to_string(start+1);
+        line += "\n";
+        writer << line;
+        line = "f " + to_string(start) + "//" + to_string(end-2);
+        line += " " + to_string(start+3) + "//" + to_string(end-2);
+        line += " " + to_string(start+2) + "//" + to_string(end-2);
+        line += "\n";
+        writer << line;
+        line  = "f " + to_string(start) +  "//" + to_string(end-2);
+        line += " " + to_string(start+1) +  "//" + to_string(end-2);
+        line += " " + to_string(start+3) + "//" + to_string(end-2);
+        line += "\n";
+        writer << line;
+        line = "f " + to_string(start+2) + "//" + to_string(start+2);
+        line += " " + to_string(end) + "//" + to_string(start+2);
+        line += " " + to_string(end-1) + "//" + to_string(start+2);
+        line += "\n";
+        writer << line;
+        line = "f " + to_string(start+2) + "//" + to_string(start+2);
+        line += " " + to_string(start+3) + "//" + to_string(start+2);
+        line += " " + to_string(end) + "//" + to_string(start+2);
+        line += "\n";
+        writer << line;
+        line = "f " + to_string(start+4) + "//" + to_string(start+4);
+        line += " " + to_string(end-1) + "//" + to_string(start+4);
+        line += " " + to_string(end) + "//" + to_string(start+4);
+        line += "\n";
+        writer << line;
+        line = "f " + to_string(start+4) + "//" + to_string(start+4);
+        line += " " + to_string(end) + "//" + to_string(start+4);
+        line += " " + to_string(end-2) + "//" + to_string(end-3);
+        line += "\n";
+        writer << line;
+        line = "f " + to_string(start) + "//" + to_string(start+3);
+        line += " " + to_string(end-3) + "//" + to_string(start+3);
+        line += " " + to_string(end-2) + "//" + to_string(start+3);
+        line += "\n";
+        writer << line;
+        line = "f " + to_string(start) + "//" + to_string(start+3);
+        line += " " + to_string(end-2) + "//" + to_string(start+3);
+        line += " " + to_string(start+1) + "//" + to_string(start+3);
+        line += "\n";
+        writer << line;
+        line = "f " + to_string(start+1) + "//" + to_string(start);
+        line += " " + to_string(end-2) + "//" + to_string(start);
+        line += " " + to_string(end) + "//" + to_string(start);
+        line += "\n";
+        writer << line;
+        line = "f " + to_string(start+1) + "//" + to_string(start);
+        line += " " + to_string(end) + "//" + to_string(end);
+        line += " " + to_string(end-4) + "//" + to_string(start);
+        line += "\n";
+        writer << line;
+        // 3//3 8//3
+    }
+    writer.close();
+}
+
 // ----------------------------------------------------------
 // specialKeys() Callback Function
 // ----------------------------------------------------------
@@ -173,6 +315,7 @@ void specialKeys( int key, int x, int y ) {
         // z -= lz * fraction;
     }
     else if(key == 113) // q for exiting program
+        generateObjFile();
         exit(0);
     
     //  Request display update
