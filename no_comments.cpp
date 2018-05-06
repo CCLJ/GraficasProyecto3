@@ -314,10 +314,11 @@ void specialKeys( int key, int x, int y ) {
         // x -= lx * fraction;
         // z -= lz * fraction;
     }
-    else if(key == 113) // q for exiting program
+    else if(key == 113) {
+    // q for exiting program
         generateObjFile();
         exit(0);
-    
+    }
     //  Request display update
     glutPostRedisplay();
  
