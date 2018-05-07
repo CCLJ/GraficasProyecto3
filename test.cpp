@@ -30,6 +30,7 @@ float x=0.0f, z=5.0f;
 float deltaAngle = 0.0f;
 float deltaMove = 0;
 int xOrigin = -1;
+double shouldRotate = false;
 
 // weights = array of the values read ob the text file
 // cubes = 3d matrix with the values of weights on each cube
@@ -42,11 +43,21 @@ struct rgb {
     double blue; 
 };
 // init color mapping
-rgb color1 = {91.0,192.0,235.0};
-rgb color2 = {133.0,203.0,51.0};
-rgb color3 = {253.0,231.0,76.0};
-rgb color4 = {255.0,188.0,66.0};
-rgb color5 = {216.0,17.0,89.0}; 
+// rgb color1 = {91.0,192.0,235.0};
+// rgb color2 = {133.0,203.0,51.0};
+// rgb color3 = {253.0,231.0,76.0};
+// rgb color4 = {255.0,188.0,66.0};
+// rgb color5 = {216.0,17.0,89.0}; 
+// rgb color1 = {255.0,0.0,255.0};
+// rgb color2 = {0.0,0.0,255.0};
+// rgb color3 = {0.0,255.0,0.0};
+// rgb color4 = {255.0,255.0,0.0};
+// rgb color5 = {255.0,0.0,0.0};
+rgb color1 = {255.0,255.0,255.0};
+rgb color2 = {24.0,53.0,103.0};
+rgb color3 = {46.0,100.0,158.0};
+rgb color4 = {23.0,173.0,203.0};
+rgb color5 = {0.0,250.0,250.0}; 
 map<int, rgb> color_map = {
     {1, color1},
     {2, color2},
@@ -109,46 +120,51 @@ void changeSize(int w, int h) {
 	glMatrixMode(GL_MODELVIEW);
 }
 
-void drawSnowMan() {
+double miN = 99999999, maX = -1, distance;
 
+void drawSnowMan() {
 	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 	const double t = glutGet(GLUT_ELAPSED_TIME) / 1000.0;
 	const double a = t*90.0;
-	    // ADDED - SOLID CUBE ------------------
     int value = 0;
-    double distance, alpha = 0.5;
+    double distance;
     rgb aux;
     largo = int(largo);
     ancho = int(ancho);
     alto = int(alto);
+    // Iterate over the dimensions of the cube
     for(int i = 0; i < int(largo); i++) {
         for(int j = 0; j < int(ancho); j++) {
             for(int k = 0; k < int(alto); k++) {
+            	// obtain the information of the cube at the current positions
                 value = cubes[i][j][j];
+                // get the color it represent
                 aux = color_map[value];
-
-                // keep center with less transparency
-                if (i >= 1 && i <= largo-2 && j >= 1 && j <= ancho-2 && k >= 1 && k <= alto-2) {
-                    alpha = 1.0;
+                // calculate the euclidean distance
+                distance += sqrt(pow(x-0.0 + 0.1 * float(i),2) + pow(0.5f-0.0 + 0.1 * float(j), 2) + pow(z - 0.0 + 0.1 * float(k),2));
+                // obtain min and max
+                miN = min(miN, distance);
+                maX = max(maX, distance);
+                // normalize the value between 1 and 0
+                distance = (distance-miN) / (maX-miN);
+                if (distance != distance) {
+                	distance = 0.5;
                 }
-                else {
-                    alpha = 0.1;
-                }
-
+                // draw the cube
                 glPushMatrix();
                     glColor4d(
                         (aux.red) / 255.0 , 
                         (aux.green) / 255.0, 
-                        (aux.blue) / 255.0, alpha);
-
+                        (aux.blue) / 255.0, distance);
                     glTranslated(0.0 + 0.1 * float(i), 0.0 + 0.1 * float(j) , 0.0 + 0.1 * float(k));
-     				// glRotated(a,0,0,1);
+                    if (shouldRotate) {
+     					glRotated(a,0,0,1);
+     				}
                     glutSolidCube(0.1);
                 glPopMatrix();
             }
         }
     }
-
     glFlush();
 }
 
@@ -173,22 +189,13 @@ void renderScene(void) {
 			x+lx, 0.3f,  z+lz,
 			0.0f, 1.0f,  0.0f);
 
-// Draw ground
-
-	// glColor3f(0.9f, 0.9f, 0.9f);
-	// glBegin(GL_QUADS);
-	// 	glVertex3f(-100.0f, 0.0f, -100.0f);
-	// 	glVertex3f(-100.0f, 0.0f,  100.0f);
-	// 	glVertex3f( 100.0f, 0.0f,  100.0f);
-	// 	glVertex3f( 100.0f, 0.0f, -100.0f);
-	// glEnd();
-
 	glPushMatrix();
 	glTranslatef(0, 0, 0);
 	drawSnowMan();
 	glPopMatrix();
 	glutSwapBuffers();
 }
+
 struct Coordinate {
     int x;
     int y;
@@ -232,6 +239,10 @@ void generateObjFile() {
     coordinates[7] = temp;
     int start = -7;
     int end = 0;
+    if (FILE *file = fopen("cube.obj", "r")) {
+        fclose(file);
+        remove("cube.obj");
+    }
     ofstream writer("cube.obj", ios::app);
     for (int i = 0; i < int(largo); ++i) {
         for(int j = 0; j < int(ancho); ++j) {
@@ -328,15 +339,17 @@ void generateObjFile() {
     writer.close();
 }
 
-void processNormalKeys(unsigned char key, int xx, int yy) { 	
+void processNormalKeys(unsigned char key, int xx, int yy) {
         if (key == 27)
               exit(0);
         else if (key == 'q') {
-        	cout << "entersssss" << endl;
         	generateObjFile(); 
         	exit(0);
+        } else if (key == 'r') {
+        	shouldRotate = !shouldRotate;
         }
 }
+
 
 
 void pressKey(int key, int xx, int yy) {
@@ -397,6 +410,7 @@ int main(int argc, char **argv) {
     cout << "Give name of text file with extension: ";
     cin >> fileName;
     readCoordinates(fileName);
+    cout << "If you want to rotate the cube press R" << endl;
 
 	// register callbacks
 	glutDisplayFunc(renderScene);

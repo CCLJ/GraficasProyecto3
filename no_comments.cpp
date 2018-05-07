@@ -33,6 +33,7 @@ void specialKeys();
 // ----------------------------------------------------------
 double rotate_y=0; 
 double rotate_x=0;
+bool isRotate = false;
 
 // angle of rotation for the camera direction
 float angle=0.0;
@@ -188,6 +189,10 @@ void generateObjFile() {
     int start = -7;
     int end = 0;
     string line;
+    if (FILE *file = fopen("cube.obj", "r")) {
+        fclose(file);
+        remove("cube.obj");
+    }
     ofstream writer("cube.obj", ios::app);
     for (int i = 0; i < int(largo); ++i) {
         for(int j = 0; j < int(ancho); ++j) {
@@ -316,6 +321,8 @@ void specialKeys( int key, int x, int y ) {
     // q for exiting program
         generateObjFile();
         exit(0);
+    } else if (key == 114) {
+        
     }
     //  Request display update
     glutPostRedisplay();
