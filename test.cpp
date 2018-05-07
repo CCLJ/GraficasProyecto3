@@ -13,38 +13,34 @@
 #else
 #include <GL/glut.h>
 #endif
- 
+
 using namespace std;
+
+// angle of rotation for the camera direction
+float angle = 0.0f;
+
+// actual vector representing the camera's direction
+float lx=0.0f,lz=-1.0f;
+
+// XZ position of the camera
+float x=0.0f, z=5.0f;
+
+// the key states. These variables will be zero
+//when no key is being presses
+float deltaAngle = 0.0f;
+float deltaMove = 0;
+int xOrigin = -1;
+
+// weights = array of the values read ob the text file
+// cubes = 3d matrix with the values of weights on each cube
+double largo, ancho, alto , weights[1001], cubes[10][10][10];
+
 
 struct rgb {
     double red;
     double green;
     double blue; 
 };
-
-// ----------------------------------------------------------
-// Function Prototypes
-// ----------------------------------------------------------
-void display();
-void specialKeys();
- 
-// ----------------------------------------------------------
-// Global Variables
-// ----------------------------------------------------------
-double rotate_y=0; 
-double rotate_x=0;
-
-// angle of rotation for the camera direction
-float angle=0.0;
-// actual vector representing the camera's direction
-float lx=0.0f,lz=-1.0f;
-// XZ position of the camera
-float x=0.0f,z=5.0f;
-
-// weights = array of the values read ob the text file
-// cubes = 3d matrix with the values of weights on each cube
-double largo, ancho, alto , weights[1001], cubes[10][10][10];
-
 // init color mapping
 rgb color1 = {91.0,192.0,235.0};
 rgb color2 = {133.0,203.0,51.0};
@@ -88,25 +84,37 @@ void readCoordinates(string fileName) {
     }
 }
 
-// ----------------------------------------------------------
-// display() Callback function
-// ----------------------------------------------------------
-void display(){
+void changeSize(int w, int h) {
 
-    //  Clear screen and Z-buffer
-    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-    
-    // Reset transformations
-    glLoadIdentity();
-    // gluLookAt(	x, 1.0f, z,
-	// 		x+lx, 1.0f,  z+lz,
-	// 		0.0f, 1.0f,  0.0f);
+	// Prevent a divide by zero, when window is too short
+	// (you cant make a window of zero width).
+	if (h == 0)
+		h = 1;
 
-    // Rotate when user changes rotate_x and rotate_y
-    glRotatef(rotate_x, 1.0, 0.0, 0.0 );
-    glRotatef(rotate_y, 0.0, 1.0, 0.0 );
-    
-    // ADDED - SOLID CUBE ------------------
+	float ratio =  w * 1.0 / h;
+
+	// Use the Projection Matrix
+	glMatrixMode(GL_PROJECTION);
+
+	// Reset Matrix
+	glLoadIdentity();
+
+	// Set the viewport to be the entire window
+	glViewport(0, 0, w, h);
+
+	// Set the correct perspective.
+	gluPerspective(45.0f, ratio, 0.1f, 100.0f);
+
+	// Get Back to the Modelview
+	glMatrixMode(GL_MODELVIEW);
+}
+
+void drawSnowMan() {
+
+	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+	const double t = glutGet(GLUT_ELAPSED_TIME) / 1000.0;
+	const double a = t*90.0;
+	    // ADDED - SOLID CUBE ------------------
     int value = 0;
     double distance, alpha = 0.5;
     rgb aux;
@@ -134,6 +142,7 @@ void display(){
                         (aux.blue) / 255.0, alpha);
 
                     glTranslated(0.0 + 0.1 * float(i), 0.0 + 0.1 * float(j) , 0.0 + 0.1 * float(k));
+     				// glRotated(a,0,0,1);
                     glutSolidCube(0.1);
                 glPopMatrix();
             }
@@ -141,9 +150,45 @@ void display(){
     }
 
     glFlush();
-    glutSwapBuffers();
 }
 
+void computePos(float deltaMove) {
+
+	x += deltaMove * lx * 0.1f;
+	z += deltaMove * lz * 0.1f;
+}
+
+void renderScene(void) {
+
+	if (deltaMove)
+		computePos(deltaMove);
+
+	// Clear Color and Depth Buffers
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	// Reset transformations
+	glLoadIdentity();
+	// Set the camera
+	gluLookAt(x, 0.5f, z,
+			x+lx, 0.3f,  z+lz,
+			0.0f, 1.0f,  0.0f);
+
+// Draw ground
+
+	// glColor3f(0.9f, 0.9f, 0.9f);
+	// glBegin(GL_QUADS);
+	// 	glVertex3f(-100.0f, 0.0f, -100.0f);
+	// 	glVertex3f(-100.0f, 0.0f,  100.0f);
+	// 	glVertex3f( 100.0f, 0.0f,  100.0f);
+	// 	glVertex3f( 100.0f, 0.0f, -100.0f);
+	// glEnd();
+
+	glPushMatrix();
+	glTranslatef(0, 0, 0);
+	drawSnowMan();
+	glPopMatrix();
+	glutSwapBuffers();
+}
 struct Coordinate {
     int x;
     int y;
@@ -187,7 +232,6 @@ void generateObjFile() {
     coordinates[7] = temp;
     int start = -7;
     int end = 0;
-    string line;
     ofstream writer("cube.obj", ios::app);
     for (int i = 0; i < int(largo); ++i) {
         for(int j = 0; j < int(ancho); ++j) {
@@ -201,6 +245,7 @@ void generateObjFile() {
                     coordinates[x] = temp;
                 }
                 // write the vertices in the file
+                string line;
                 for (int x = 0; x < 8; ++x) {
                     line = "v ";
                     temp = coordinates[x];
@@ -215,6 +260,7 @@ void generateObjFile() {
             }
         }
     }
+    string line;
     for (x = 0; x < 8; ++x) {
         start += 8;
         end += 8;
@@ -274,7 +320,7 @@ void generateObjFile() {
         line += "\n";
         writer << line;
         line = "f " + to_string(start+1) + "//" + to_string(start);
-        line += " " + to_string(end) + "//" + to_string(end);
+        line += " " + to_string(end) + "//" + to_string(start);
         line += " " + to_string(end-4) + "//" + to_string(start);
         line += "\n";
         writer << line;
@@ -282,89 +328,96 @@ void generateObjFile() {
     writer.close();
 }
 
-// ----------------------------------------------------------
-// specialKeys() Callback Function
-// ----------------------------------------------------------
-void specialKeys( int key, int x, int y ) {
- 
-    float fraction = 0.1f;
-    //  Right arrow - increase rotation by 5 degree
-    if (key == GLUT_KEY_RIGHT) {
-        rotate_y += 5;
-        // angle += 0.01f;
-        // lx = sin(angle);
-        // lz = -cos(angle);
-    }
-    //  Left arrow - decrease rotation by 5 degree
-    else if (key == GLUT_KEY_LEFT) {
-        rotate_y -= 5;
-        // angle -= 0.01f;
-        // lx = sin(angle);
-        // lz = -cos(angle);
-    }
-    else if (key == GLUT_KEY_UP) {
-        rotate_x += 5;
-        // x += lx * fraction;
-        // z += lz * fraction;
-    }
-    else if (key == GLUT_KEY_DOWN) {
-        rotate_x -= 5;
-        // x -= lx * fraction;
-        // z -= lz * fraction;
-    }
-    else if(key == 113) {
-    // q for exiting program
-        generateObjFile();
-        exit(0);
-    }
-    //  Request display update
-    glutPostRedisplay();
- 
+void processNormalKeys(unsigned char key, int xx, int yy) { 	
+        if (key == 27)
+              exit(0);
+        else if (key == 'q') {
+        	cout << "entersssss" << endl;
+        	generateObjFile(); 
+        	exit(0);
+        }
 }
- 
-// ----------------------------------------------------------
-// main() function
-// ----------------------------------------------------------
-int main(int argc, char* argv[]){
- 
-    // get data from file
-    string fileName = "";
+
+
+void pressKey(int key, int xx, int yy) {
+
+       switch (key) {
+             case GLUT_KEY_UP : deltaMove = 0.5f; break;
+             case GLUT_KEY_DOWN : deltaMove = -0.5f; break;
+       }
+}
+
+void releaseKey(int key, int x, int y) { 	
+
+        switch (key) {
+             case GLUT_KEY_UP :
+             case GLUT_KEY_DOWN : deltaMove = 0;break;
+        }
+} 
+void mouseMove(int x, int y) { 	
+
+         // this will only be true when the left button is down
+         if (xOrigin >= 0) {
+
+		// update deltaAngle
+		deltaAngle = (x - xOrigin) * 0.001f;
+
+		// update camera's direction
+		lx = sin(angle + deltaAngle);
+		lz = -cos(angle + deltaAngle);
+	}
+}
+
+void mouseButton(int button, int state, int x, int y) {
+
+	// only start motion if the left button is pressed
+	if (button == GLUT_LEFT_BUTTON) {
+
+		// when the button is released
+		if (state == GLUT_UP) {
+			angle += deltaAngle;
+			xOrigin = -1;
+		}
+		else  {// state = GLUT_DOWN
+			xOrigin = x;
+		}
+	}
+}
+
+int main(int argc, char **argv) {
+
+	// init GLUT and create window
+	glutInit(&argc, argv);
+	glutInitDisplayMode(GLUT_DEPTH | GLUT_DEPTH | GLUT_RGBA);
+	glutInitWindowPosition(100,100);
+	glutInitWindowSize(320,320);
+	glutCreateWindow("Lighthouse3D - GLUT Tutorial");
+
+	string fileName = "";
     cout << "Give name of text file with extension: ";
     cin >> fileName;
     readCoordinates(fileName);
 
-    //  Initialize GLUT and process user parameters
-    glutInit(&argc,argv);
-    
-    //  Request double buffered true color window with Z-buffer
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+	// register callbacks
+	glutDisplayFunc(renderScene);
+	glutReshapeFunc(changeSize);
+	glutIdleFunc(renderScene);
 
-    // window size
-    glutInitWindowSize(720, 720);
-    
-    // Create window
-    glutCreateWindow("Awesome Cube");
-    
-    //  Enable Z-buffer depth test
-    // glEnable(GL_DEPTH_TEST);
+	glutIgnoreKeyRepeat(1);
+	glutKeyboardFunc(processNormalKeys);
+	glutSpecialFunc(pressKey);
+	glutSpecialUpFunc(releaseKey);
 
-    // ADDED - CUBE TRANSPARENCY ---------------------
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    // -----------------------------------------------
-    
-    // Callback functions
-    glutDisplayFunc(display);
-    glutSpecialFunc(specialKeys);
+	// here are the two new functions
+	glutMouseFunc(mouseButton);
+	glutMotionFunc(mouseMove);
 
-    // ADDED - CUBE TRANSPARENCY ---------------------
-    // glDisable(GL_BLEND);
-    // -----------------------------------------------
-    
-    //  Pass control to GLUT for events
-    glutMainLoop();
-    
-    //  Return to OS
-    return 0;
- 
+	// OpenGL init
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	// enter GLUT event processing cycle
+	glutMainLoop();
+
+	return 1;
 }
