@@ -24,3 +24,10 @@ Si queremos podemos generar un archivo con información aleatoria. Para esto gen
 Y lo ejecutamos:<br>
 ```$ ./random```<br>
 El programa nos va a pedir el tamaño de un cubo perfecto y generara un archivo `info_random.txt` que le podemos pasar al ejecutable <br>`project`
+<br>
+Authors:
+```
+Daniel Gonzalez Gonzalez A01280648
+Jose Luis Carvajal Carbajal A01280704
+Jorge Armando Vazquez Ortiz A01196160
+```
