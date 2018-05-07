@@ -6,7 +6,7 @@ using namespace std;
 int main() {
 	int sizeOfCube;
 	cin >> sizeOfCube;
-	ofstream outputFile("test1.txt");
+	ofstream outputFile("info_random.txt");
 	outputFile << sizeOfCube << " " << sizeOfCube << " " << sizeOfCube << endl;
 	for (int i = 0; i < sizeOfCube*sizeOfCube*sizeOfCube; ++i) {
 		if (i < sizeOfCube * sizeOfCube * sizeOfCube - 1) {
